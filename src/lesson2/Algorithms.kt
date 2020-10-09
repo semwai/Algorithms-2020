@@ -2,6 +2,9 @@
 
 package lesson2
 
+import kotlin.math.ceil
+import kotlin.math.sqrt
+
 /**
  * Получение наибольшей прибыли (она же -- поиск максимального подмассива)
  * Простая
@@ -95,7 +98,23 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * вернуть ту из них, которая встречается раньше в строке first.
  */
 fun longestCommonSubstring(first: String, second: String): String {
-    TODO()
+    /*
+    Скороть O(n^2)
+    Память  O(n^2)
+    Вдохновился таблицей в презентации как раз про эту задачу
+    max - хранит начало максимального совпадения и длину
+     */
+    val grid = List(first.length + 1) { Array(second.length + 1) { 0 } }
+    var max = Pair(0, 0)
+    for (i in first.indices)
+        for (j in second.indices) {
+            if (first[i] == second[j]) {
+                grid[i + 1][j + 1] = grid[i][j] + 1
+                if (max.second < grid[i + 1][j + 1])
+                    max = Pair(i - max.second, grid[i + 1][j + 1])
+            }
+        }
+    return first.substring(max.first, max.first + max.second)
 }
 
 /**
@@ -109,5 +128,22 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Единица простым числом не считается.
  */
 fun calcPrimesNumber(limit: Int): Int {
-    TODO()
+    /*
+    Скорость - O(n*sqrt(n)) = O(n^(3/2)), т.к. во внутреннем цикле я перебираю не до n, а до корня из n.
+    Память   - O(1)
+     */
+    if (limit <= 1) return 0
+    var count = 0
+    val max = ceil(sqrt(limit.toDouble())).toInt()
+    for (i in 2..limit) {
+        var prime = true
+        for (j in 2..if (i < max) i else max) {
+            if (i % j == 0 && i != j) {
+                prime = false
+                break
+            }
+        }
+        count += if (prime) 1 else 0
+    }
+    return count
 }

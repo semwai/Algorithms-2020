@@ -2,6 +2,10 @@
 
 package lesson1
 
+import java.io.File
+import java.lang.Exception
+import java.util.*
+
 /**
  * Сортировка времён
  *
@@ -63,7 +67,29 @@ fun sortTimes(inputName: String, outputName: String) {
  * В случае обнаружения неверного формата файла бросить любое исключение.
  */
 fun sortAddresses(inputName: String, outputName: String) {
-    TODO()
+    /*
+    * Скорость - O(n*log(n))
+    * Память   - O(a) + O(b) + O(c)
+    * где a,b - это количетсво уникальных комбинаций улица+дом
+    * с - количество людей\записей в целом
+    * */
+    val book: SortedMap<String, SortedMap<Int, MutableList<String>>> = TreeMap()
+    File(inputName).forEachLine {
+        val name = it.split(" - ")[0].trim()
+        val buff = it.split(" - ")[1].trim().split(' ')
+        val street = buff[0]
+        val house = buff[1].toInt()
+        book.putIfAbsent(street, TreeMap())
+        book[street]?.putIfAbsent(house, mutableListOf())
+        book[street]?.get(house)?.add(name)
+    }
+    val out = File(outputName)
+    out.createNewFile()
+    book.forEach { (street, u) ->
+        u.forEach { (house, names) ->
+            out.appendText("$street $house - ${names.sorted().joinToString(", ")}\n")
+        }
+    }
 }
 
 /**
@@ -96,8 +122,25 @@ fun sortAddresses(inputName: String, outputName: String) {
  * 99.5
  * 121.3
  */
+
 fun sortTemperatures(inputName: String, outputName: String) {
-    TODO()
+    /*количество элементов у нас явно ограниченно по условию задачи,
+    а именно (500+273)*10, поэтому использую сортировку подсчетом
+    скорость    -   O(N)
+    память      -   O(N)
+    (время на запись в файл не считал)*/
+    val array = Array(7731) { 0 }
+    File(inputName).forEachLine {
+        val index = (it.toFloat() * 10).toInt() + 2730
+        array[index]++
+    }
+    val out = File(outputName)
+    array.forEachIndexed { index, i ->
+        val value = (index - 2730) / 10.0
+        if (i > 0) {
+            out.appendText(String.format(Locale.ROOT, "%.1f\n", value).repeat(i))
+        }
+    }
 }
 
 /**

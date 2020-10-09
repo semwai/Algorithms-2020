@@ -49,6 +49,21 @@ abstract class AbstractTaskTests : AbstractFileTests() {
 
     protected fun sortAddresses(sortAddresses: (String, String) -> Unit) {
         try {
+            sortAddresses("input/semwai/sortAddresses1.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    1Первая 1 - Петров Иван
+                    1Первая 2 - Иванов Алексей
+                    2Вторая 1 - Сидоров Петр
+                    2Вторая 2 - Сидорова Мария
+                    2Вторая 3 - Иванов Михаил
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
             sortAddresses("input/addr_in1.txt", "temp.txt")
             assertFileContent(
                 "temp.txt",
@@ -101,6 +116,24 @@ abstract class AbstractTaskTests : AbstractFileTests() {
     }
 
     protected fun sortTemperatures(sortTemperatures: (String, String) -> Unit) {
+        try {
+            sortTemperatures("input/semwai/sortTemperatures1.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    -200.0
+                    -200.0
+                    2.2
+                    4.4
+                    4.4
+                    4.4
+                    5.5
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+
         try {
             sortTemperatures("input/temp_in1.txt", "temp.txt")
             assertFileContent(
