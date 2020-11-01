@@ -90,11 +90,10 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      * Средняя
      *
      * Память    -  O(1)
-     * Сложность -  O(n)
+     * Сложность -  O(log(n)) для сбалансированного дерева. стремится к O(n) с умешьшением показателя сбалансированности дерева
+     * n - количество элементов дерева
      */
     override fun remove(element: T): Boolean {
-        if (!contains(element)) return false
-
         var current = root
         var parent: Node<T>? = null
         var left = true
@@ -103,20 +102,24 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             parent = current
             when (element.compareTo(current.value)) {
                 1 -> {
+                    if (current.right == null)
+                        return false
                     current = current.right
                     left = false
                 }
                 -1 -> {
+                    if (current.left == null)
+                        return false
                     current = current.left
                     left = true
                 }
             }
         }
 
-        val x = current.left == null
-        val y = current.right == null
+        val lNull = current.left == null
+        val rNull = current.right == null
 
-        if (x && y) {
+        if (lNull && rNull) {
             when {
                 current == root -> root = null
                 left -> parent?.left = null
@@ -124,7 +127,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             }
             size--
         }
-        if (x && !y) {
+        if (lNull && !rNull) {
             when {
                 current == root -> root = current.right
                 left -> parent?.left = current.right
@@ -132,7 +135,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             }
             size--
         }
-        if (!x && y) {
+        if (!lNull && rNull) {
             when {
                 current == root -> root = current.left
                 left -> parent?.left = current.left
@@ -140,7 +143,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             }
             size--
         }
-        if (!x && !y) {
+        if (!lNull && !rNull) {
             val min = current.right!!.min()
             remove(min)
             when {
@@ -180,7 +183,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
     inner class BinarySearchTreeIterator internal constructor() : MutableIterator<T> {
 
         private var current: Node<T>? = null
-        private var pref: Node<T>? = null
+        private var previous: Node<T>? = null
 
         init {
             //находим самую маленькую ноду
@@ -219,27 +222,29 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          * Спецификация: [java.util.Iterator.next] (Ctrl+Click по next)
          *
          * Средняя
-         * Сложность    -   O(N)
-         * Память       -   O(N)
+         * Сложность    -   O(n*log(b))
+         * Память       -   O(n)
+         * n - количество элементов в дереве
          */
         override fun next(): T {
-            if (current == null)
-                throw NoSuchElementException()
+            val current = current ?: throw NoSuchElementException()
             val e = mutableSetOf<Node<T>>()
             val s = Stack<Node<T>>()
             s.push(root)
             while (s.isNotEmpty()) {
                 val v = s.pop()
-                if (v.value > current!!.value)
+                if (v.value > current.value)
                     e.add(v)
                 if (v.right != null)
                     s.push(v.right)
                 if (v.left != null)
                     s.push(v.left)
             }
-            pref = current
-            current = e.firstOrNull()
-            return pref!!.value
+            previous = current
+            //Если текущее значение самое большое в дереве, то в стеке s не окажется элементов и текущий элемент станет
+            //равным null, что позволит выдать Exception для след. next() и вернет false для  hasNext()
+            this.current = e.firstOrNull()
+            return previous!!.value
         }
 
 
@@ -259,15 +264,16 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          */
         private var deleted: T? = null
         override fun remove() {
-            if (pref == null)
+            if (previous == null)
                 throw IllegalStateException()
 
             if (deleted != null) {
-                if (deleted == pref!!.value)
+                if (deleted == previous!!.value)
                     throw IllegalStateException()
             }
-            deleted = pref!!.value
-            remove(pref!!.value)
+            deleted = previous!!.value
+            //я попытался хранить каждый раз родителей элемента, но это у меня получилось слишком плохо, поэтому я оставил так
+            remove(previous!!.value)
         }
     }
 

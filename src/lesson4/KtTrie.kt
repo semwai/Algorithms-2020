@@ -68,8 +68,42 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
      *
      * Сложная
      */
-    override fun iterator(): MutableIterator<String> {
-        TODO()
+    override fun iterator() = KtTrieIterator()
+
+    inner class KtTrieIterator internal constructor() : MutableIterator<String> {
+
+        private val data = mutableSetOf<String>()
+        private val it: MutableIterator<String> by lazy { data.iterator() }
+        private var current: String? = null
+
+        init {
+            find(root)
+        }
+
+        private fun find(current: Node, acc: String = "") {
+            if (current.children.isEmpty()) {
+                if (acc.isNotEmpty())
+                    data.add(acc.dropLast(1))
+            } else {
+                current.children.forEach { (t, u) ->
+                    find(u, acc + t)
+                }
+            }
+        }
+
+        override fun hasNext(): Boolean {
+            return it.hasNext()
+        }
+
+        override fun next(): String {
+            current = it.next()
+            return current!!
+        }
+
+        override fun remove() {
+            TODO("Not yet implemented")
+        }
+
     }
 
 }

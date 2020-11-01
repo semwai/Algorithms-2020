@@ -270,8 +270,25 @@ abstract class AbstractBinarySearchTreeTest {
                     "The tree has the element $element that is not in control set."
                 )
             }
-            println("All clear!")
+
+
         }
+        //Удаление более одного элемента в цикле
+        val myData = create()
+        myData.addAll(1..10)
+        val myIter = myData.iterator()
+
+        while (myIter.hasNext()) {
+            val current = myIter.next()
+            if (current % 2 == 0)
+                myIter.remove()
+        }
+
+        myData.forEach {
+            assertTrue { it % 2 != 0 }
+        }
+        myData.toList()
+        println("\n${myData.toList()} All clear!!")
     }
 
     protected fun doSubSetTest() {
