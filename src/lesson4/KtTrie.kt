@@ -1,5 +1,8 @@
 package lesson4
 
+import java.util.*
+
+
 /**
  * Префиксное дерево для строк
  */
@@ -72,24 +75,24 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
 
     inner class KtTrieIterator internal constructor() : MutableIterator<String> {
 
-        private val data = mutableSetOf<String>()
-        private val it: MutableIterator<String> by lazy { data.iterator() }
+
         private var current: String? = null
 
-        init {
-            find(root)
-        }
-
-        private fun find(current: Node, acc: String = "") {
-            if (current.children.isEmpty()) {
-                if (acc.isNotEmpty())
-                    data.add(acc.dropLast(1))
-            } else {
-                current.children.forEach { (t, u) ->
-                    find(u, acc + t)
+        private fun find(): Sequence<String> = sequence {
+            val s = Stack<Pair<Node, String>>() //node to path
+            s.push(root to "")
+            while (s.isNotEmpty()) {
+                val (current, path) = s.pop()
+                if (current.children[0.toChar()] != null && path.isNotEmpty())
+                    yield(path)
+                current.children.forEach { (c: Char, child: Node) ->
+                    s.push(child to path + c)
                 }
             }
+
         }
+
+        private val it: Iterator<String> = find().iterator()
 
         override fun hasNext(): Boolean {
             return it.hasNext()
@@ -100,8 +103,15 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
             return current!!
         }
 
+        private var deleted: String? = null
         override fun remove() {
-            TODO("Not yet implemented")
+            if (current == null)
+                throw IllegalStateException()
+            if (deleted != null)
+                if (deleted == current!!)
+                    throw IllegalStateException()
+            deleted = current
+            remove(current!!)
         }
 
     }

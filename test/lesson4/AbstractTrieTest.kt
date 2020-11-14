@@ -70,6 +70,9 @@ abstract class AbstractTrieTest {
     protected fun doIteratorTest() {
         implementationTest { create().iterator().hasNext() }
         implementationTest { create().iterator().next() }
+
+
+
         val random = Random()
         for (iteration in 1..100) {
             val controlSet = mutableSetOf<String>()
