@@ -78,6 +78,10 @@ class KtOpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T
      * Спецификация: [java.util.Set.remove] (Ctrl+Click по remove)
      *
      * Средняя
+     *
+     * память - O(1)
+     * трудоемкость - от O(1) до O(n) - где n = кол-во элементов с одинаковым индексом
+     * (O(n) произойдет в случае если в коллекции большое количество элементов относительно максимального возможного)
      */
     override fun remove(element: T): Boolean {
         var index = element.startingIndex()
@@ -103,6 +107,8 @@ class KtOpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T
      * Спецификация: [java.util.Iterator] (Ctrl+Click по Iterator)
      *
      * Средняя (сложная, если поддержан и remove тоже)
+     *
+     * При создании итератора требуется O(n^2) времени.
      */
     override fun iterator(): MutableIterator<T> {
         return AddresIterator()
@@ -110,29 +116,41 @@ class KtOpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T
 
     inner class AddresIterator internal constructor() : MutableIterator<T> {
 
-        private val elements = storage.filterNotNull().filter { it !is Deleted }
-        var i = -1
+        /*
+        Тут такая-же ситуация, как и в Trie. Раньше это была просто коллекция без asSequence, которая за n^2 времени
+        находила все подходящие элементы, а дальше hasNext & next давали результат за константное время O(1).
+        Теперь начальных затрат нет, но вышеописанные функции работают за линейное время.
+        Память O(n)
+         */
+        private val it = storage.asSequence().filterNotNull().filter { it !is Deleted }.iterator()
+
+        private var current: T? = null
 
         override fun hasNext(): Boolean {
-            return i < elements.size - 1
+            return it.hasNext()
         }
 
         override fun next(): T {
-            return if (hasNext()) elements[++i] as T else throw IllegalStateException()
+            if (!hasNext())
+                throw IllegalStateException()
+            current = it.next() as T
+            return current!!
         }
 
         private var deleted: T? = null
 
+        /*
+       время и память - аналогично с обычным remove
+        */
         override fun remove() {
-            if (i == -1)
+            if (current == null)
                 throw IllegalStateException()
             if (deleted != null) {
-                if (deleted == elements[i])
+                if (deleted == current)
                     throw IllegalStateException()
             }
-            deleted = elements[i] as T
-
-            remove(elements[i])
+            deleted = current
+            remove(current!!)
         }
 
     }
